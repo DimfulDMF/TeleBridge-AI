@@ -1,253 +1,138 @@
 # 🌉 TeleBridge AI
 
-> Connect an AI assistant to your personal Telegram account — locally, securely, and under your control.
+> **Connect ChatGPT to your personal Telegram account.**
 
-**TeleBridge AI** is an experimental open-source bridge that allows an AI assistant to interact with your personal Telegram account through a locally running client.
+**TeleBridge AI** is an open-source local bridge that allows ChatGPT to interact with your personal Telegram account.
 
-Instead of using a Telegram bot account, TeleBridge AI uses a Telegram **user session** through [Telethon](https://github.com/LonamiWebs/Telethon), allowing the bridge to work with chats that are already available to your Telegram account.
+Ask ChatGPT to read your conversations, search message history, send messages, reply to people, or list your chats — while the actual Telegram connection stays on your own computer.
 
-The bridge can:
+### ✨ Features
 
-- 💬 List your Telegram chats
-- 📖 Read recent messages
+- 💬 Read recent Telegram messages
 - 🔎 Search message history
 - ✉️ Send messages
 - ↩️ Reply to messages
-- 🖥️ Run locally on Windows or Linux
-- 🔐 Keep your Telegram session on your own machine
-- 🤖 Act as a gateway between Telegram and an AI assistant
-
----
-
-## ⚠️ Project Status
-
-TeleBridge AI is currently an **experimental proof of concept / MVP**.
-
-It is intended for development, experimentation, and personal automation.
-
-The project is **not affiliated with Telegram or OpenAI**.
-
-You are responsible for using it in accordance with Telegram's Terms of Service and applicable platform policies.
+- 📋 List your chats
+- 🤖 Control Telegram using natural-language requests in ChatGPT
+- 🖥️ Runs locally on Windows and Linux
+- 🥧 Works on Raspberry Pi
+- 🔓 Fully open source
+- 🔐 Telegram session stays on your machine
 
 ---
 
 # 🧠 How It Works
 
-TeleBridge AI separates the AI assistant from your Telegram credentials.
-
-The AI does **not** need direct access to your Telegram `.session` file.
-
-Instead, commands travel through a small command transport layer.
+TeleBridge separates the AI from your Telegram authentication.
 
 ```text
-┌──────────────────────┐
-│     AI Assistant     │
-│      / ChatGPT       │
-└──────────┬───────────┘
-           │
-           │ commands
-           ▼
-┌──────────────────────┐
-│   Command Transport  │
-│                      │
-│ Google Apps Script   │
-│ + Google Sheets      │
-└──────────┬───────────┘
-           │
-           │ polling
-           ▼
-┌──────────────────────┐
-│    TeleBridge AI     │
-│      bridge.py       │
-│                      │
-│ Windows / Linux      │
-└──────────┬───────────┘
-           │
-           │ Telethon
-           ▼
-┌──────────────────────┐
-│       Telegram       │
-│   Personal Account   │
-└──────────────────────┘
+┌───────────────┐
+│    ChatGPT    │
+└───────┬───────┘
+        │
+        │ Google Drive / Sheets
+        ▼
+┌───────────────────────┐
+│ Google Apps Script    │
+│ + Command Queue       │
+└───────────┬───────────┘
+            │
+            │ Polling
+            ▼
+┌───────────────────────┐
+│     TeleBridge AI     │
+│       bridge.py       │
+│                       │
+│   Your PC / Server    │
+└───────────┬───────────┘
+            │
+            │ Telethon
+            ▼
+┌───────────────────────┐
+│       Telegram        │
+│   Personal Account    │
+└───────────────────────┘
 ```
 
-Responses travel back through the same path:
+ChatGPT creates a command in Google Sheets.
+
+`bridge.py` running on your computer receives the command and executes it through Telegram using Telethon.
+
+The result is written back to the command queue, where ChatGPT can read it.
 
 ```text
-Telegram
-   ↓
+You
+ ↓
+ChatGPT
+ ↓
+Google Sheets
+ ↓
 bridge.py
-   ↓
-Command Transport
-   ↓
-AI Assistant
-```
-
-This design means the machine running TeleBridge AI remains the component that actually authenticates with Telegram and performs Telegram operations.
-
----
-
-# ✨ Features
-
-### Telegram
-
-TeleBridge AI currently supports operations such as:
-
-```text
-chats
-read
-search
-send
-reply
-```
-
-Examples:
-
-```text
-chats
-```
-
-Returns available Telegram dialogs.
-
-```text
-read | John
-```
-
-Returns recent text messages from a chat.
-
-```text
-search | John | birthday
-```
-
-Searches messages in a conversation.
-
-```text
-send | @username | Happy birthday! 🎉
-```
-
-Sends a message.
-
-```text
-reply | @username | MESSAGE_ID | Sounds good!
-```
-
-Replies to a specific message.
-
----
-
-# 🔐 Security Model
-
-TeleBridge AI was designed so that Telegram authentication remains local.
-
-Your:
-
-- Telegram login code
-- Telegram 2FA password
-- `.session` file
-- API hash
-- bridge secret
-
-should **never be committed to GitHub**.
-
-The Telegram session is stored on the computer running `bridge.py`.
-
-```text
-AI Assistant
-      │
-      │ command
-      ▼
-Bridge transport
-      │
-      ▼
-YOUR COMPUTER
-┌─────────────────────┐
-│ Telegram .session   │
-│ Telegram API keys   │
-│ bridge.py           │
-└─────────────────────┘
-      │
-      ▼
+ ↓
 Telegram
+ ↓
+bridge.py
+ ↓
+Google Sheets
+ ↓
+ChatGPT
 ```
-
-## Never publish
-
-Do not commit files such as:
-
-```text
-.env
-*.session
-*.session-journal
-```
-
-Never hard-code real credentials into a public repository.
 
 ---
 
-# 📋 Requirements
+# 📦 Requirements
 
-You will need:
+You need:
 
-- Windows 10/11 **or** a modern Linux distribution
+- Windows 10/11 or Linux
 - Python 3.9+
-- A Telegram account
+- Telegram account
 - Telegram API ID
 - Telegram API Hash
-- A Google account
+- Google account
 - Google Sheets
 - Google Apps Script
+- ChatGPT with compatible Google Drive/Sheets access
 
 Recommended:
 
 - Python 3.11+
 - Git
-- A machine that can remain running while the bridge is needed
+- A computer that can remain online while you use the bridge
 
 ---
 
-# 1️⃣ Clone TeleBridge AI
+# 🚀 Installation
 
-## Windows
+## 1. Download TeleBridge AI
 
-Open **PowerShell**:
-
-```powershell
-git clone https://github.com/DimfulDMF/TeleBridge-AI.git
-cd TeleBridge-AI
-```
-
-If Git is not installed, you can download the repository as a ZIP from GitHub and extract it.
-
----
-
-## Linux
-
-Open a terminal:
+Clone the repository:
 
 ```bash
 git clone https://github.com/DimfulDMF/TeleBridge-AI.git
 cd TeleBridge-AI
 ```
 
+You can also download the repository as a ZIP from GitHub and extract it.
+
 ---
 
-# 2️⃣ Create a Python Virtual Environment
+# 🐍 2. Install Python Dependencies
 
-Using a virtual environment is strongly recommended.
+Using a virtual environment is recommended.
 
 ## Windows
 
+Open PowerShell inside the TeleBridge AI folder:
+
 ```powershell
 python -m venv .venv
-```
-
-Activate it:
-
-```powershell
 .venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
 ```
 
-If PowerShell blocks activation, you can alternatively use Command Prompt:
+If PowerShell doesn't allow activation, use Command Prompt:
 
 ```cmd
 .venv\Scripts\activate.bat
@@ -259,76 +144,58 @@ If PowerShell blocks activation, you can alternatively use Command Prompt:
 
 ```bash
 python3 -m venv .venv
-```
-
-Activate it:
-
-```bash
 source .venv/bin/activate
-```
-
----
-
-# 3️⃣ Install Dependencies
-
-With the virtual environment activated:
-
-## Windows
-
-```powershell
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-## Linux
-
-```bash
 python3 -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-The main dependencies are:
-
-```text
-telethon
-requests
-```
-
 ---
 
-# 4️⃣ Get Telegram API Credentials
+# 🔑 3. Get Telegram API Credentials
 
-TeleBridge AI uses Telegram's client API through Telethon.
+TeleBridge uses Telegram's client API through Telethon.
 
 Open:
 
 **https://my.telegram.org**
 
-Sign in with your Telegram account.
+Log in with your Telegram account.
 
-Then:
+Then open:
 
-1. Open **API development tools**
-2. Create an application
-3. Copy your **API ID**
-4. Copy your **API Hash**
+```text
+API development tools
+```
 
-You should receive values similar to:
+Create an application.
+
+Telegram will provide:
+
+```text
+API ID
+API Hash
+```
+
+Example:
 
 ```text
 API_ID=12345678
 API_HASH=0123456789abcdef0123456789abcdef
 ```
 
-⚠️ These values are private.
-
-Do not publish your real API Hash.
+⚠️ **Never publish your real API Hash.**
 
 ---
 
-# 5️⃣ Create the Command Queue
+# ☁️ 4. Create the Google Command Queue
 
 Create a new Google Spreadsheet.
+
+Name it:
+
+```text
+TeleBridge AI
+```
 
 Create a sheet named:
 
@@ -336,36 +203,32 @@ Create a sheet named:
 Commands
 ```
 
-The first row must contain:
+Add the following columns to the first row:
 
 | id | command | target | text | status | result |
 |---|---|---|---|---|---|
 
-For example:
+The bridge uses this sheet as a command queue.
+
+A new command starts with:
 
 ```text
-id | command | target | text | status | result
+pending
 ```
 
-Commands waiting for the local bridge use:
-
-```text
-status = pending
-```
-
-When the bridge picks up a command, it becomes:
+When `bridge.py` receives it:
 
 ```text
 processing
 ```
 
-After execution:
+When the command finishes:
 
 ```text
 done
 ```
 
-or:
+If something fails:
 
 ```text
 error
@@ -373,9 +236,11 @@ error
 
 ---
 
-# 6️⃣ Install the Google Apps Script Bridge
+# 🔗 5. Install Google Apps Script
 
-Inside your Google Sheet:
+Open your **TeleBridge AI** spreadsheet.
+
+Go to:
 
 ```text
 Extensions
@@ -384,61 +249,54 @@ Extensions
 
 Delete the default example code.
 
-Copy the contents of:
+Open:
 
 ```text
 apps_script.gs
 ```
 
-from this repository into the Apps Script editor.
+from this repository and copy its contents into the Apps Script editor.
 
 ---
 
-# 7️⃣ Create a Bridge Secret
+# 🔐 6. Create a Bridge Secret
 
-The bridge endpoint must not be left completely unprotected.
+The bridge uses a secret to prevent random requests from accessing the command endpoint.
 
-Generate a long random secret.
+Create a long random value.
 
-Example format:
+For example:
 
 ```text
-3f41a842c18e4e0c9a4c63e02e27d2e94d2b93a4
+YOUR_LONG_RANDOM_SECRET
 ```
 
-Do **not** use this example.
+⚠️ Do not actually use that example.
 
-Generate your own value.
+Generate your own random secret and configure it in the Apps Script.
 
-Set it in your Apps Script configuration according to the instructions in `apps_script.gs`.
+The same secret will also be used by `bridge.py`.
 
-The same secret must later be configured on the computer running TeleBridge AI.
+Never publish your real `BRIDGE_SECRET`.
 
 ---
 
-# 8️⃣ Deploy Google Apps Script
+# 🌐 7. Deploy Apps Script
 
-In Apps Script:
+Inside Google Apps Script:
 
 ```text
 Deploy
 → New deployment
+→ Web app
 ```
 
-Select:
+Configure the deployment and deploy it.
+
+Google will provide a URL similar to:
 
 ```text
-Web app
-```
-
-Configure the deployment so the bridge can access the endpoint.
-
-Deploy it.
-
-Google will give you a URL similar to:
-
-```text
-https://script.google.com/macros/s/DEPLOYMENT_ID/exec
+https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec
 ```
 
 Save this URL.
@@ -451,11 +309,18 @@ BRIDGE_URL
 
 ---
 
-# 9️⃣ Configure TeleBridge AI
+# ⚙️ 8. Configure TeleBridge
 
-Create your environment configuration.
+TeleBridge needs four important values:
 
-Copy:
+```text
+TG_API_ID
+TG_API_HASH
+BRIDGE_URL
+BRIDGE_SECRET
+```
+
+If your version uses `.env`, copy:
 
 ```text
 .env.example
@@ -467,8 +332,6 @@ to:
 .env
 ```
 
-Then configure your values.
-
 Example:
 
 ```env
@@ -479,23 +342,19 @@ BRIDGE_URL=https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec
 BRIDGE_SECRET=YOUR_RANDOM_BRIDGE_SECRET
 ```
 
-Replace every example value with your own.
+Replace the examples with your own values.
 
-Never commit `.env`.
+⚠️ Never upload your real `.env` file to GitHub.
 
 ---
 
-# 🔟 Start TeleBridge AI
+# ▶️ 9. Start TeleBridge AI
 
 ## Windows
-
-With the virtual environment active:
 
 ```powershell
 python bridge.py
 ```
-
----
 
 ## Linux
 
@@ -503,7 +362,11 @@ python bridge.py
 python3 bridge.py
 ```
 
-On first launch, Telethon may ask:
+---
+
+# 📱 10. First Telegram Login
+
+The first time TeleBridge starts, Telethon may ask:
 
 ```text
 Please enter your phone (or bot token):
@@ -517,11 +380,11 @@ Example:
 +12345678900
 ```
 
-Telegram will send you a login code.
+Telegram will send you an authorization code.
 
-Enter it when requested.
+Enter the code.
 
-If your account uses Telegram 2FA, Telethon will also ask:
+If Telegram 2FA is enabled, you will also see:
 
 ```text
 Please enter your password:
@@ -529,282 +392,247 @@ Please enter your password:
 
 Enter your Telegram 2FA password.
 
-After successful authentication you should see something similar to:
+After successful authorization you should see something similar to:
 
 ```text
-Telegram authorized
+✅ Telegram authorized
 
 Name: Example
 Username: @example
 ID: 123456789
-```
 
-Telethon will create a local session file.
-
-For example:
-
-```text
-telegram.session
-```
-
-From that point, you normally won't need to enter the Telegram login code every time.
-
----
-
-# ✅ Bridge Connection
-
-After Telegram authentication, TeleBridge AI tests the command transport.
-
-A successful connection should look similar to:
-
-```text
-Telegram authorized
-Bridge connected
+✅ Google bridge connected
 
 Waiting for commands...
 ```
 
-The bridge will periodically request pending commands from the Apps Script endpoint.
+Telethon creates a local `.session` file.
+
+This allows TeleBridge to reconnect without asking for a Telegram login code every time.
 
 ---
 
-# 📨 Command Lifecycle
+# 🤖 11. Connect ChatGPT
 
-Suppose the AI wants to send:
+Now connect ChatGPT to the Google account containing your TeleBridge spreadsheet.
+
+In ChatGPT open:
 
 ```text
-Hello!
+Settings
+→ Apps
+→ Google Drive
+→ Connect
 ```
 
-to:
+Sign in using the Google account containing:
 
 ```text
-@example
+TeleBridge AI
 ```
 
-A command is created:
+Grant the required permissions.
+
+ChatGPT should now be able to access the spreadsheet used by TeleBridge.
+
+> **Note:** Connected-app availability and write permissions can depend on your ChatGPT plan, region, account, and current ChatGPT product configuration.
+
+---
+
+# 🧩 12. Tell ChatGPT How to Use TeleBridge
+
+Start a new ChatGPT conversation.
+
+You can give ChatGPT a prompt like this:
 
 ```text
-ID:
-cmd-001
+Use my Google Sheet named "TeleBridge AI" as my Telegram command bridge.
 
-COMMAND:
+The "Commands" sheet contains these columns:
+
+id | command | target | text | status | result
+
+To perform a Telegram operation, add a new command with a unique ID
+and set its status to "pending".
+
+bridge.py will receive the command, execute it locally through Telegram,
+and write the result back into the result column.
+
+Wait until the command finishes before reading its result.
+
+Supported commands:
+
+chats
+read
+search
 send
-
-TARGET:
-@example
-
-TEXT:
-Hello!
-
-STATUS:
-pending
+reply
 ```
 
-The local bridge sees it:
+After that, you can use natural requests.
+
+For example:
 
 ```text
-▶ send | @example | Hello!
+Show me my Telegram chats.
 ```
 
-TeleBridge executes the command through Telethon.
-
-The row is then updated:
+Or:
 
 ```text
-STATUS:
-done
+Read my latest messages with Alex.
 ```
 
-and a result is returned.
+Or:
+
+```text
+Search my conversation with Alex for "Minecraft".
+```
+
+Or:
+
+```text
+Send @username: Happy birthday! 🎉
+```
+
+ChatGPT creates the command, and your local TeleBridge executes it.
 
 ---
 
-# 🔎 Reading Messages
+# 💬 Supported Commands
 
-A read command might look like:
+## `chats`
 
-```text
-command = read
-target = John
-```
-
-The local client resolves the dialog and reads recent messages.
-
-Example result:
-
-```text
-[10521] John: Hey
-[10522] You: What's up?
-[10523] John: Are you free tonight?
-```
-
-Media-only messages may be omitted depending on the bridge configuration.
-
----
-
-# 🔍 Searching Telegram
-
-Search can be performed inside Telegram dialogs.
+Lists Telegram dialogs.
 
 Example:
 
 ```text
-command = search
-target = John
-text = minecraft
-```
-
-Possible result:
-
-```text
-[9281] John: wanna play minecraft?
-[10332] You: minecraft server is online
+command: chats
+status: pending
 ```
 
 ---
 
-# ✉️ Sending Messages
+## `read`
+
+Reads recent messages from a chat.
 
 Example:
 
 ```text
-command = send
-target = @example
-text = Happy birthday! 🎉
+command: read
+target: Alex
+status: pending
 ```
-
-The message is sent from **your Telegram account**, not from a Telegram bot.
-
-⚠️ This means commands with write access should be treated carefully.
 
 ---
 
-# ↩️ Replies
+## `search`
 
-A reply operation can reference an existing Telegram message ID.
+Searches message history.
 
 Example:
 
 ```text
-command = reply
-target = @example
-text = 10523|Sure, let's go!
+command: search
+target: Alex
+text: Minecraft
+status: pending
 ```
-
-The exact wire format depends on the version of `bridge.py`.
 
 ---
 
-# 🪟 Running Automatically on Windows
+## `send`
 
-If you want TeleBridge AI to start automatically, you can use **Task Scheduler**.
+Sends a real Telegram message from your account.
 
-Open:
-
-```text
-Task Scheduler
-```
-
-Choose:
+Example:
 
 ```text
-Create Task
+command: send
+target: @username
+text: Hello!
+status: pending
 ```
-
-Configure a trigger such as:
-
-```text
-At log on
-```
-
-For the program, select the Python executable inside your virtual environment:
-
-```text
-C:\path\to\TeleBridge-AI\.venv\Scripts\python.exe
-```
-
-Arguments:
-
-```text
-bridge.py
-```
-
-Start in:
-
-```text
-C:\path\to\TeleBridge-AI
-```
-
-After login, Windows can automatically start the bridge.
 
 ---
 
-# 🐧 Running as a Linux Service
+## `reply`
 
-For an always-on Linux machine, `systemd` is recommended.
+Replies to an existing Telegram message.
 
-Create:
+The exact parameters depend on the current `bridge.py` command format.
 
-```bash
-sudo nano /etc/systemd/system/telebridge.service
-```
+---
 
-Example configuration:
+# 🔐 Security
 
-```ini
-[Unit]
-Description=TeleBridge AI
-After=network-online.target
-Wants=network-online.target
+TeleBridge AI is **open source**.
 
-[Service]
-Type=simple
-User=YOUR_USER
-WorkingDirectory=/home/YOUR_USER/TeleBridge-AI
-ExecStart=/home/YOUR_USER/TeleBridge-AI/.venv/bin/python bridge.py
-Restart=always
-RestartSec=5
+You can inspect the source code yourself and see how Telegram authentication, commands, and network requests are handled.
 
-[Install]
-WantedBy=multi-user.target
-```
+Your Telegram authentication happens locally on the computer running `bridge.py`.
 
-Replace:
+ChatGPT does **not need your Telegram `.session` file, Telegram login code, or 2FA password**.
+
+However, no software should be considered magically immune to account theft or security vulnerabilities.
+
+You are responsible for protecting your credentials.
+
+### Never publish:
 
 ```text
-YOUR_USER
+*.session
+*.session-journal
+.env
+Telegram API Hash
+Telegram login codes
+Telegram 2FA password
+BRIDGE_SECRET
 ```
 
-with your Linux username.
+Your Telegram `.session` file is especially sensitive.
 
-Then run:
+Anyone who obtains a valid authenticated session may potentially gain access to your Telegram account.
 
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable telebridge
-sudo systemctl start telebridge
+Treat it like a password.
+
+---
+
+# 🛡️ Recommended `.gitignore`
+
+Make sure your repository contains:
+
+```gitignore
+.env
+*.session
+*.session-journal
+
+__pycache__/
+*.pyc
+
+.venv/
+venv/
 ```
 
-Check status:
+---
 
-```bash
-sudo systemctl status telebridge
-```
+# 🖥️ Supported Platforms
 
-View logs:
+TeleBridge AI is designed for:
 
-```bash
-journalctl -u telebridge -f
-```
+- 🪟 **Windows**
+- 🐧 **Linux**
+- 🥧 **Raspberry Pi / Linux ARM**
+
+An always-on Linux computer or Raspberry Pi can be used to keep TeleBridge available continuously.
 
 ---
 
 # 🥧 Raspberry Pi
 
-TeleBridge AI can also run on a Raspberry Pi running Raspberry Pi OS or another Linux distribution.
-
-Installation is essentially identical to Linux:
+Installation on Raspberry Pi OS is almost identical to Linux:
 
 ```bash
 sudo apt update
@@ -821,282 +649,73 @@ pip install -r requirements.txt
 python3 bridge.py
 ```
 
-A Raspberry Pi can be useful as an always-on local Telegram gateway.
-
 ---
 
-# 🧰 Troubleshooting
+# 🛠️ Troubleshooting
 
-## `ModuleNotFoundError: telethon`
+### `ModuleNotFoundError: telethon`
 
-Install dependencies:
+Run:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-or:
-
-```bash
-pip install telethon requests
-```
-
 ---
 
-## Telegram asks for a login code every time
+### Google Bridge says `Unauthorized`
 
-Make sure the `.session` file is not being deleted.
-
-The session file should remain in the working directory unless another session path has been configured.
-
----
-
-## Apps Script returns Unauthorized
-
-Check:
+Check that:
 
 ```text
 BRIDGE_SECRET
 ```
 
-The value configured locally must exactly match the value configured for the Apps Script bridge.
+is exactly the same in Apps Script and your local configuration.
 
 ---
 
-## Bridge cannot connect
+### Commands stay `pending`
 
-Verify the Apps Script deployment URL.
-
-It should normally end with:
+Make sure:
 
 ```text
-/exec
+bridge.py
 ```
 
-Also verify that the deployment is accessible using the account/access configuration you selected.
-
----
-
-## Commands remain `pending`
-
-Check whether `bridge.py` is currently running.
-
-You should see:
-
-```text
-Waiting for commands...
-```
+is running.
 
 Also check:
 
-- internet connection
+- Internet connection
 - Apps Script URL
-- bridge secret
-- spreadsheet structure
 - Apps Script deployment
+- `BRIDGE_SECRET`
+- Google Sheet structure
 
 ---
 
-## Commands remain `processing`
+### Command stays `processing`
 
-This usually means the bridge received the command but did not successfully return the result.
+The bridge probably received the command but failed before returning the result.
 
-Check the local bridge console for errors.
-
----
-
-## Telegram connection fails
-
-Verify:
+Check the terminal running:
 
 ```text
-TG_API_ID
-TG_API_HASH
+bridge.py
 ```
 
-Also make sure Telegram's API is reachable from your network.
+for an error.
 
 ---
 
-# 🛡️ Security Recommendations
+### Telegram asks for authorization every time
 
-If you intend to use TeleBridge AI beyond experimentation:
-
-### 1. Protect the bridge secret
-
-Use a cryptographically random value.
-
-Do not use:
-
-```text
-password
-123456
-telebridge
-secret
-```
+Make sure your `.session` file is not being deleted.
 
 ---
 
-### 2. Never upload Telegram sessions
-
-Add this to `.gitignore`:
-
-```gitignore
-*.session
-*.session-journal
-```
-
-A Telegram session can provide access to your account.
-
-Treat it like a credential.
-
----
-
-### 3. Never expose your API hash
-
-Keep it inside local configuration.
-
----
-
-### 4. Restrict write commands
-
-Operations such as:
-
-```text
-send
-reply
-```
-
-perform real actions from your Telegram account.
-
-For production use, consider implementing confirmation before executing write operations.
-
-For example:
-
-```text
-AI requests SEND
-       ↓
-Pending confirmation
-       ↓
-User approves
-       ↓
-Telegram message sent
-```
-
----
-
-### 5. Add replay protection
-
-Each command should have a unique ID.
-
-The local bridge should avoid executing the same command twice.
-
----
-
-### 6. Consider command expiration
-
-Old commands should not execute unexpectedly after a machine reconnects.
-
-A production implementation should include timestamps and expiration.
-
----
-
-# 🗺️ Roadmap
-
-Possible future improvements:
-
-- [ ] Better authentication
-- [ ] Encrypted command payloads
-- [ ] Command expiration
-- [ ] User confirmation for write actions
-- [ ] Message pagination
-- [ ] Media support
-- [ ] File downloads
-- [ ] Voice message transcription
-- [ ] Telegram message links
-- [ ] Multiple Telegram accounts
-- [ ] Multiple AI clients
-- [ ] Web dashboard
-- [ ] Docker support
-- [ ] Native REST gateway
-- [ ] WebSocket transport
-- [ ] Replace Google Sheets with a dedicated message queue
-- [ ] Plugin/tool API for AI assistants
-- [ ] Discord adapter
-- [ ] WhatsApp adapter
-- [ ] Signal adapter
-
----
-
-# 🧩 Why a Local Bridge?
-
-Giving a remote AI service a Telegram session would be a significant security risk.
-
-TeleBridge AI takes another approach:
-
-```text
-Remote AI
-   │
-   │ restricted commands
-   ▼
-Transport
-   │
-   ▼
-Local trusted process
-   │
-   │ Telegram credentials stay here
-   ▼
-Telegram
-```
-
-This creates a separation between:
-
-**Reasoning / AI**
-
-and:
-
-**Authentication / execution**
-
-The AI can request an operation while the trusted local process remains responsible for actually interacting with Telegram.
-
----
-
-# 💡 Example Use Cases
-
-TeleBridge AI can be used experimentally for:
-
-- summarizing conversations
-- finding old messages
-- drafting replies
-- sending approved messages
-- searching personal Telegram history
-- personal AI assistants
-- local automation
-- message organization
-- notification workflows
-
----
-
-# ⚖️ Responsible Use
-
-TeleBridge AI operates through a personal Telegram account.
-
-Do not use it for:
-
-- spam
-- unsolicited bulk messaging
-- harassment
-- account abuse
-- bypassing Telegram restrictions
-- automated behavior that violates Telegram's Terms of Service
-
-Telegram may limit or ban accounts that abuse its API.
-
-Use conservative rate limits and keep a human in control of important actions.
-
----
-
-# 📁 Repository Structure
+# 📁 Project Structure
 
 ```text
 TeleBridge-AI/
@@ -1105,7 +724,7 @@ TeleBridge-AI/
 │   └── Local Telegram client and command executor
 │
 ├── apps_script.gs
-│   └── Google Apps Script transport endpoint
+│   └── Google Apps Script command endpoint
 │
 ├── requirements.txt
 │   └── Python dependencies
@@ -1114,7 +733,7 @@ TeleBridge-AI/
 │   └── Example configuration
 │
 ├── .gitignore
-│   └── Prevents credentials/session files from being committed
+│   └── Protects credentials and session files
 │
 └── README.md
     └── Documentation
@@ -1122,40 +741,64 @@ TeleBridge-AI/
 
 ---
 
-# 🤝 Contributing
+# 🗺️ Roadmap
 
-Contributions, experiments, bug reports, and improvements are welcome.
+Possible future improvements:
 
-If you find a bug, open an Issue.
-
-For larger changes:
-
-```bash
-git checkout -b feature/my-feature
-```
-
-Make your changes and submit a Pull Request.
-
-Please never include real Telegram credentials or session files in issues, commits, screenshots, or pull requests.
+- [ ] Better command authentication
+- [ ] Encrypted command payloads
+- [ ] Confirmation before sending messages
+- [ ] Message pagination
+- [ ] Media support
+- [ ] Multiple Telegram accounts
+- [ ] Docker support
+- [ ] Native REST gateway
+- [ ] WebSocket transport
+- [ ] Replace Google Sheets with a dedicated gateway
+- [ ] Additional messenger adapters
 
 ---
 
-# 📜 License
+# ⚠️ Disclaimer
 
-A license has not yet been selected.
+TeleBridge AI is an experimental open-source project.
 
-Before accepting external contributions or distributing the project widely, consider adding an open-source license such as MIT, Apache-2.0, or GPL-3.0.
+It is **not affiliated with Telegram or OpenAI**.
+
+Messages sent using TeleBridge are sent from your real Telegram account.
+
+Do not use the project for:
+
+- spam
+- unsolicited bulk messaging
+- harassment
+- account abuse
+- bypassing Telegram restrictions
+
+Use automation responsibly and follow Telegram's Terms of Service.
+
+---
+
+# 💸 Support the Project
+
+If you like **TeleBridge AI** and want to support its development, you can leave a donation:
+
+### ❤️ Donate
+
+**https://donatex.gg/donate/dimful1209**
+
+Every donation helps support further development of TeleBridge AI.
 
 ---
 
 # ⭐ TeleBridge AI
 
-**Your Telegram. Your machine. Your AI bridge.**
+### Your Telegram. Your machine. Your AI bridge.
 
 ```text
 AI ↔ Local Bridge ↔ Telegram
 ```
 
-If you find the project interesting, consider giving the repository a ⭐.
+**Open source · Local-first · Under your control**
 
-💸Donate - https://donatex.gg/donate/dimful1209
+If you find TeleBridge AI useful, consider giving the repository a ⭐.
