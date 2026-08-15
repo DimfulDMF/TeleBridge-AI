@@ -1157,3 +1157,4 @@ AI ↔ Local Bridge ↔ Telegram
 ```
 
 If you find the project interesting, consider giving the repository a ⭐.
+💸Donate - https://donatex.gg/donate/dimful1209
